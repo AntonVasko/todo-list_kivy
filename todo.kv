@@ -1,0 +1,112 @@
+# Правило для кастомного Label с возможностью клика
+<ClickableLabel>:
+    # Визуальные свойства для кликабельного лейбла
+    color: (0.2, 0.6, 0.8, 1)  # Синий цвет
+    bold: True
+    # Эффект при наведении
+    canvas.before:
+        Color:
+            rgba: (0.9, 0.9, 0.9, 1) if self.state == 'down' else (1, 1, 1, 0)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+# Правило для элемента задачи
+<TaskItem>:
+    size_hint_y: None
+    height: '50dp'
+    spacing: '10dp'
+    padding: '10dp'
+
+    # CheckBox для отметки выполнения
+    CheckBox:
+        size_hint_x: None
+        width: '30dp'
+        on_active: root.on_checkbox_active(self, self.active)
+
+    # Текст задачи с зачеркиванием если выполнено
+    Label:
+        id: task_label
+        text: root.text
+        text_size: self.width, None
+        halign: 'left'
+        valign: 'middle'
+        # Меняем оформление в зависимости от статуса
+        color: (0.3, 0.3, 0.3, 0.5) if root.completed else (0, 0, 0, 1)
+        strikethrough: True if root.completed else False
+        font_size: '18sp'
+        shorten: True
+        shorten_from: 'right'
+
+    # Кнопка удаления
+    Button:
+        size_hint_x: None
+        width: '40dp'
+        text: '×'
+        font_size: '20sp'
+        bold: True
+        background_color: (0.8, 0.2, 0.2, 1)
+        on_press: root.delete_task()
+
+# Главный макет приложения
+BoxLayout:
+    orientation: 'vertical'
+    padding: '10dp'
+    spacing: '10dp'
+
+    # Заголовок
+    Label:
+        text: 'Мой To-Do List'
+        font_size: '24sp'
+        bold: True
+        size_hint_y: None
+        height: '50dp'
+        color: (0.2, 0.4, 0.6, 1)
+
+    # Панель добавления новых задач
+    BoxLayout:
+        size_hint_y: None
+        height: '50dp'
+        spacing: '10dp'
+
+        TextInput:
+            id: new_task_input
+            hint_text: 'Введите новую задачу...'
+            multiline: False
+            on_text_validate: app.add_task(self)  # Enter для добавления
+            padding: '10dp'
+
+        Button:
+            size_hint_x: None
+            width: '100dp'
+            text: 'Добавить'
+            background_color: (0.2, 0.6, 0.2, 1)
+            on_press: app.add_task(new_task_input)
+
+    # Статистика
+    BoxLayout:
+        size_hint_y: None
+        height: '40dp'
+        spacing: '10dp'
+
+        Label:
+            text: app.update_stats()
+            font_size: '16sp'
+            bold: True
+
+        ClickableLabel:
+            text: 'Очистить все'
+            font_size: '16sp'
+            on_press: app.clear_all_tasks()
+
+    # Контейнер для задач с прокруткой
+    ScrollView:
+        do_scroll_x: False
+        do_scroll_y: True
+
+        GridLayout:
+            id: tasks_container
+            cols: 1
+            size_hint_y: None
+            height: self.minimum_height  # Важно для ScrollView!
+            spacing: '5dp'
